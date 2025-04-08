@@ -9,15 +9,12 @@ interface PageLayoutProps {
 
 const PageLayout = ({ children }: PageLayoutProps) => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
-      <main className="flex-1 py-6">
+      <main className="flex-1 py-6 px-4 pb-24">
         {children}
       </main>
       <MobileNavigation />
-      <div className="pb-16">
-        {/* Space for mobile navigation */}
-      </div>
     </div>
   );
 };

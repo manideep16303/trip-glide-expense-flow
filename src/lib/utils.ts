@@ -3,6 +3,8 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { Expense, ExpenseCategory, Trip } from "@/types"
 import * as XLSX from 'xlsx';
+import { toast } from "@/components/ui/use-toast";
+import { Share } from "@capacitor/share";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -96,55 +98,114 @@ export const getTotalExpenses = (expenses: Expense[]): number => {
   return expenses.reduce((total, expense) => total + expense.amount, 0);
 };
 
-export const exportToExcel = (trip: Trip) => {
-  // Prepare data for export
-  const workbook = XLSX.utils.book_new();
-  
-  // Report summary
-  const reportSummary = [
-    ['Trip Expense Report'],
-    ['Trip', trip.title],
-    ['Destination', trip.destination || 'N/A'],
-    ['Date Range', `${formatDate(trip.startDate)} - ${trip.endDate ? formatDate(trip.endDate) : 'Present'}`],
-    ['Total Expenses', formatCurrency(getTotalExpenses(trip.expenses))],
-    [],
-  ];
-  
-  const summarySheet = XLSX.utils.aoa_to_sheet(reportSummary);
-  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Report Summary');
-  
-  // Expenses detail
-  const expensesData = [
-    ['Date', 'Category', 'Description', 'Amount'],
-    ...trip.expenses.map(expense => [
-      formatDate(expense.date),
-      expense.category,
-      expense.description,
-      expense.amount
-    ])
-  ];
-  
-  const expensesSheet = XLSX.utils.aoa_to_sheet(expensesData);
-  XLSX.utils.book_append_sheet(workbook, expensesSheet, 'Expenses Detail');
-  
-  // Category summary
-  const categories = Array.from(new Set(trip.expenses.map(expense => expense.category)));
-  const categoryData = [
-    ['Category', 'Total Amount'],
-    ...categories.map(category => [
-      category,
-      trip.expenses
-        .filter(expense => expense.category === category)
-        .reduce((sum, expense) => sum + expense.amount, 0)
-    ])
-  ];
-  
-  const categorySheet = XLSX.utils.aoa_to_sheet(categoryData);
-  XLSX.utils.book_append_sheet(workbook, categorySheet, 'By Category');
-  
-  // Generate file name
-  const fileName = `Trip_Expense_Report_${trip.title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
-  
-  // Export workbook
-  XLSX.writeFile(workbook, fileName);
+export const exportToExcel = async (trip: Trip) => {
+  try {
+    // Prepare data for export
+    const workbook = XLSX.utils.book_new();
+    
+    // Report summary
+    const reportSummary = [
+      ['Trip Expense Report'],
+      ['Trip', trip.title],
+      ['Destination', trip.destination || 'N/A'],
+      ['Date Range', `${formatDate(trip.startDate)} - ${trip.endDate ? formatDate(trip.endDate) : 'Present'}`],
+      ['Total Expenses', formatCurrency(getTotalExpenses(trip.expenses))],
+      [],
+    ];
+    
+    const summarySheet = XLSX.utils.aoa_to_sheet(reportSummary);
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Report Summary');
+    
+    // Expenses detail
+    const expensesData = [
+      ['Date', 'Category', 'Description', 'Amount'],
+      ...trip.expenses.map(expense => [
+        formatDate(expense.date),
+        expense.category,
+        expense.description,
+        expense.amount
+      ])
+    ];
+    
+    const expensesSheet = XLSX.utils.aoa_to_sheet(expensesData);
+    XLSX.utils.book_append_sheet(workbook, expensesSheet, 'Expenses Detail');
+    
+    // Category summary
+    const categories = Array.from(new Set(trip.expenses.map(expense => expense.category)));
+    const categoryData = [
+      ['Category', 'Total Amount'],
+      ...categories.map(category => [
+        category,
+        trip.expenses
+          .filter(expense => expense.category === category)
+          .reduce((sum, expense) => sum + expense.amount, 0)
+      ])
+    ];
+    
+    const categorySheet = XLSX.utils.aoa_to_sheet(categoryData);
+    XLSX.utils.book_append_sheet(workbook, categorySheet, 'By Category');
+    
+    // Generate file name
+    const fileName = `Trip_Expense_Report_${trip.title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    
+    // Export workbook
+    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    
+    // Convert to Blob
+    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+    
+    // Create object URL
+    const url = URL.createObjectURL(blob);
+    
+    // On mobile, attempt to share the file
+    try {
+      // For mobile devices
+      await Share.share({
+        title: 'Trip Expense Report',
+        text: `Expense report for ${trip.title}`,
+        url: url,
+      });
+    } catch (error) {
+      // Fallback - Direct download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    
+    // Cleanup
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Report generated",
+      description: "Your report has been generated successfully",
+    });
+  } catch (error) {
+    console.error('Error generating report:', error);
+    toast({
+      title: "Error generating report",
+      description: "There was an error generating your report. Please try again.",
+      variant: "destructive"
+    });
+  }
+};
+
+// Add mobile share functionality
+export const shareContent = async (title: string, text: string) => {
+  try {
+    await Share.share({
+      title,
+      text,
+      dialogTitle: 'Share with buddies',
+    });
+  } catch (error) {
+    console.error('Error sharing content:', error);
+    toast({
+      title: "Sharing failed",
+      description: "There was an error sharing the content.",
+      variant: "destructive"
+    });
+  }
 };
