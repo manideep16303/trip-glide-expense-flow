@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Expense, ExpenseCategory } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -13,12 +12,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useExpenses } from "@/context/ExpensesContext";
+import { useTrips } from "@/context/TripsContext";
 
-interface ExpenseFormProps {
+export interface ExpenseFormProps {
   isOpen: boolean;
   onClose: () => void;
   expense?: Expense;
   mode: "create" | "edit";
+  tripId?: string;
 }
 
 const expenseCategories: ExpenseCategory[] = [
@@ -30,13 +31,14 @@ const expenseCategories: ExpenseCategory[] = [
   "Toll/Parking charges",
 ];
 
-export const ExpenseForm = ({ isOpen, onClose, expense, mode }: ExpenseFormProps) => {
+export const ExpenseForm = ({ isOpen, onClose, expense, mode, tripId }: ExpenseFormProps) => {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<ExpenseCategory>("Miscellaneous");
   const [date, setDate] = useState<Date>(new Date());
   
   const { addExpense, updateExpense, deleteExpense } = useExpenses();
+  const { addExpense: addTripExpense, updateExpense: updateTripExpense, deleteExpense: deleteTripExpense } = useTrips();
 
   useEffect(() => {
     if (expense && mode === "edit") {
@@ -53,19 +55,37 @@ export const ExpenseForm = ({ isOpen, onClose, expense, mode }: ExpenseFormProps
     e.preventDefault();
     
     if (mode === "create") {
-      addExpense({
-        amount: parseFloat(amount),
-        description,
-        category,
-        date,
-      });
+      if (tripId) {
+        addTripExpense(tripId, {
+          amount: parseFloat(amount),
+          description,
+          category,
+          date,
+        });
+      } else {
+        addExpense({
+          amount: parseFloat(amount),
+          description,
+          category,
+          date,
+        });
+      }
     } else if (expense) {
-      updateExpense(expense.id, {
-        amount: parseFloat(amount),
-        description,
-        category,
-        date,
-      });
+      if (tripId) {
+        updateTripExpense(expense.id, {
+          amount: parseFloat(amount),
+          description,
+          category,
+          date,
+        });
+      } else {
+        updateExpense(expense.id, {
+          amount: parseFloat(amount),
+          description,
+          category,
+          date,
+        });
+      }
     }
     
     resetForm();
@@ -74,7 +94,11 @@ export const ExpenseForm = ({ isOpen, onClose, expense, mode }: ExpenseFormProps
 
   const handleDelete = () => {
     if (expense) {
-      deleteExpense(expense.id);
+      if (tripId) {
+        deleteTripExpense(expense.id);
+      } else {
+        deleteExpense(expense.id);
+      }
       resetForm();
       onClose();
     }

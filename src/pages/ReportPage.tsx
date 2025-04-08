@@ -7,23 +7,112 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useExpenses } from "@/context/ExpensesContext";
-import { exportToExcel } from "@/lib/utils";
+import { formatDate, formatCurrency } from "@/lib/utils";
+import * as XLSX from 'xlsx';
+import { toast } from "@/components/ui/use-toast";
 
 const ReportPage = () => {
-  const { expenses } = useExpenses();
+  const { expenses, getExpensesByDateRange } = useExpenses();
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
   const handleGenerateReport = () => {
-    const filteredExpenses = expenses.filter((expense) => {
-      const expenseDate = new Date(expense.date);
-      const start = startDate ? new Date(startDate) : new Date(0);
-      const end = endDate ? new Date(endDate) : new Date(8640000000000000); // Max date
+    if (!startDate && !endDate) {
+      toast({
+        title: "Date range required",
+        description: "Please select at least one date to generate a report",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      return expenseDate >= start && expenseDate <= end;
+    const start = startDate ? new Date(startDate) : new Date(0);
+    const end = endDate ? new Date(endDate) : new Date();
+    
+    // Set end date to end of day
+    if (endDate) {
+      end.setHours(23, 59, 59, 999);
+    }
+
+    const filteredExpenses = getExpensesByDateRange(start, end);
+    
+    if (filteredExpenses.length === 0) {
+      toast({
+        title: "No expenses found",
+        description: "No expenses found in the selected date range",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Export to Excel
+    exportToExcel(filteredExpenses, start, end);
+  };
+
+  const exportToExcel = (filteredExpenses: any[], start: Date, end: Date) => {
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    
+    // Create report title and date range
+    const reportTitle = `Expense Report: ${formatDate(start)} to ${formatDate(end)}`;
+    
+    // Prepare data for summary sheet
+    const summaryData = [
+      [reportTitle],
+      ['Date Range', `${formatDate(start)} to ${formatDate(end)}`],
+      ['Total Expenses', formatCurrency(filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0))],
+      ['Number of Expenses', filteredExpenses.length.toString()],
+      []
+    ];
+    
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+
+    // Prepare data for detailed expenses
+    const expenseHeaders = ['Date', 'Category', 'Description', 'Amount'];
+    const expenseData = [
+      expenseHeaders,
+      ...filteredExpenses.map(expense => [
+        formatDate(new Date(expense.date)),
+        expense.category,
+        expense.description,
+        expense.amount
+      ])
+    ];
+    
+    const expensesSheet = XLSX.utils.aoa_to_sheet(expenseData);
+    XLSX.utils.book_append_sheet(workbook, expensesSheet, 'Expenses');
+
+    // Prepare data for category summary
+    const categoryMap = new Map();
+    filteredExpenses.forEach(expense => {
+      const category = expense.category;
+      const currentSum = categoryMap.get(category) || 0;
+      categoryMap.set(category, currentSum + expense.amount);
     });
-
-    exportToExcel(filteredExpenses, startDate, endDate);
+    
+    const categoryData = [
+      ['Category', 'Total Amount', 'Percentage'],
+      ...Array.from(categoryMap.entries()).map(([category, amount]) => [
+        category,
+        formatCurrency(amount),
+        `${((amount / filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0)) * 100).toFixed(2)}%`
+      ])
+    ];
+    
+    const categorySheet = XLSX.utils.aoa_to_sheet(categoryData);
+    XLSX.utils.book_append_sheet(workbook, categorySheet, 'By Category');
+    
+    // Generate filename based on date range
+    const fileName = `Expense_Report_${start.toISOString().split('T')[0]}_to_${end.toISOString().split('T')[0]}.xlsx`;
+    
+    // Write to file and download
+    XLSX.writeFile(workbook, fileName);
+    
+    toast({
+      title: "Report generated",
+      description: `Your report has been downloaded as ${fileName}`,
+    });
   };
 
   return (

@@ -9,6 +9,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { ExpenseForm } from "./ExpenseForm";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -41,9 +42,9 @@ const ExpenseList = ({ expenses, tripId }: ExpenseListProps) => {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case "TA/DA":
+      case "Travel":
         return "bg-blue-100 text-blue-800";
-      case "Hotel/Accommodation":
+      case "Stay":
         return "bg-purple-100 text-purple-800";
       case "Local conveyance":
         return "bg-green-100 text-green-800";
@@ -70,7 +71,7 @@ const ExpenseList = ({ expenses, tripId }: ExpenseListProps) => {
     <>
       <div className="space-y-4">
         {expenses.map((expense) => (
-          <Card key={expense.id} className="expense-card">
+          <Card key={expense.id} className="p-4">
             <div className="flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -147,8 +148,5 @@ const ExpenseList = ({ expenses, tripId }: ExpenseListProps) => {
     </>
   );
 };
-
-// This is needed to prevent a TypeScript error in the component
-const cn = (...args: any[]) => args.join(' ').trim();
 
 export default ExpenseList;

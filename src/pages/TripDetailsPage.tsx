@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTrips } from "@/context/TripsContext";
@@ -26,6 +27,7 @@ import { ExpenseForm } from "@/components/expenses/ExpenseForm";
 import PageLayout from "@/components/layout/PageLayout";
 import { ArrowLeft, CalendarIcon, Download, Edit, MapPinIcon, Plus, Trash2 } from "lucide-react";
 import { ExpenseCategory, Trip } from "@/types";
+import { cn } from "@/lib/utils";
 
 const TripDetailsPage = () => {
   const { tripId } = useParams<{ tripId: string }>();
@@ -116,7 +118,7 @@ const TripDetailsPage = () => {
             <span className="sr-only">Back</span>
           </Button>
           <h1 className="text-2xl font-bold">{currentTrip.title}</h1>
-          <Badge className={getStatusColor(currentTrip.status)} variant="outline">
+          <Badge className={cn(getStatusColor(currentTrip.status))} variant="outline">
             {currentTrip.status.charAt(0).toUpperCase() + currentTrip.status.slice(1)}
           </Badge>
         </div>
