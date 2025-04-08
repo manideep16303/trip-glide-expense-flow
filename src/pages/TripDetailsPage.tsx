@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTrips } from "@/context/TripsContext";
@@ -23,10 +22,10 @@ import {
 } from "@/components/ui/dialog";
 import { formatCurrency, formatDate, getTotalExpenses, exportToExcel } from "@/lib/utils";
 import ExpenseList from "@/components/expenses/ExpenseList";
-import ExpenseForm from "@/components/expenses/ExpenseForm";
+import { ExpenseForm } from "@/components/expenses/ExpenseForm";
 import PageLayout from "@/components/layout/PageLayout";
 import { ArrowLeft, CalendarIcon, Download, Edit, MapPinIcon, Plus, Trash2 } from "lucide-react";
-import { ExpenseCategory } from "@/types";
+import { ExpenseCategory, Trip } from "@/types";
 
 const TripDetailsPage = () => {
   const { tripId } = useParams<{ tripId: string }>();
@@ -36,14 +35,12 @@ const TripDetailsPage = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
 
-  // Find the trip by ID when the component loads or tripId changes
   useEffect(() => {
     if (tripId) {
       setCurrentTrip(tripId);
     }
     
     return () => {
-      // Clear current trip when component unmounts
       setCurrentTrip(null);
     };
   }, [tripId, setCurrentTrip]);
@@ -68,7 +65,6 @@ const TripDetailsPage = () => {
 
   const totalExpenses = getTotalExpenses(currentTrip.expenses);
   
-  // Group expenses by category
   const expensesByCategory = currentTrip.expenses.reduce((acc, expense) => {
     if (!acc[expense.category]) {
       acc[expense.category] = [];
@@ -77,7 +73,6 @@ const TripDetailsPage = () => {
     return acc;
   }, {} as Record<ExpenseCategory, typeof currentTrip.expenses>);
   
-  // Calculate total per category
   const categoryTotals = Object.entries(expensesByCategory).map(([category, expenses]) => ({
     category,
     total: expenses.reduce((sum, exp) => sum + exp.amount, 0),
@@ -242,7 +237,6 @@ const TripDetailsPage = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Add Expense Dialog */}
       <ExpenseForm
         isOpen={isExpenseFormOpen}
         onClose={() => setIsExpenseFormOpen(false)}
@@ -250,7 +244,6 @@ const TripDetailsPage = () => {
         mode="create"
       />
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -270,7 +263,6 @@ const TripDetailsPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Complete Trip Dialog */}
       <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
         <DialogContent>
           <DialogHeader>

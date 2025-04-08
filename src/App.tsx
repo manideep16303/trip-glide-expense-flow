@@ -10,8 +10,11 @@ import AuthPage from "./pages/AuthPage";
 import ExpensesPage from "./pages/ExpensesPage";
 import ReportPage from "./pages/ReportPage";
 import ProfilePage from "./pages/ProfilePage";
+import TripsPage from "./pages/TripsPage";
+import TripDetailsPage from "./pages/TripDetailsPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ExpensesProvider } from "./context/ExpensesContext";
+import { TripsProvider } from "./context/TripsContext";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +51,22 @@ const AppRoutes = () => {
         } 
       />
       <Route 
+        path="/trips" 
+        element={
+          <ProtectedRoute>
+            <TripsPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/trips/:tripId" 
+        element={
+          <ProtectedRoute>
+            <TripDetailsPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/report" 
         element={
           <ProtectedRoute>
@@ -71,15 +90,17 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <ExpensesProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
-      </ExpensesProvider>
+      <TripsProvider>
+        <ExpensesProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </TooltipProvider>
+        </ExpensesProvider>
+      </TripsProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

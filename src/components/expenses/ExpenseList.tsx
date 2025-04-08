@@ -6,7 +6,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Pencil, Trash2 } from "lucide-react";
-import ExpenseForm from "./ExpenseForm";
+import { ExpenseForm } from "./ExpenseForm";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 

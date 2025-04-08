@@ -1,4 +1,3 @@
-
 import { Expense, ExpenseCategory, Trip } from "@/types";
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,7 +12,7 @@ type TripsContextType = {
   updateTrip: (tripId: string, tripData: Partial<Trip>) => void;
   deleteTrip: (tripId: string) => void;
   setCurrentTrip: (tripId: string | null) => void;
-  addExpense: (tripId: string, expense: Omit<Expense, "id" | "tripId">) => void;
+  addExpense: (tripId: string, expense: Omit<Expense, "id" | "userId">) => void;
   updateExpense: (expenseId: string, expenseData: Partial<Expense>) => void;
   deleteExpense: (expenseId: string) => void;
   completeTrip: (tripId: string) => void;
@@ -38,10 +37,8 @@ export const TripsProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (user) {
-      // Load trips from localStorage or generate mock data
       const storedTrips = localStorage.getItem(`trips-${user.id}`);
       if (storedTrips) {
-        // Parse dates properly from JSON
         const parsedTrips = JSON.parse(storedTrips, (key, value) => {
           if (key === "startDate" || key === "endDate" || key === "date") {
             return value ? new Date(value) : null;
@@ -50,7 +47,6 @@ export const TripsProvider = ({ children }: { children: ReactNode }) => {
         });
         setTrips(parsedTrips);
       } else {
-        // Generate mock trips
         const mockTrips = generateMockTrips(user.id);
         setTrips(mockTrips);
         localStorage.setItem(`trips-${user.id}`, JSON.stringify(mockTrips));
@@ -63,7 +59,6 @@ export const TripsProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
-  // Save trips to localStorage whenever they change
   useEffect(() => {
     if (user && trips.length > 0) {
       localStorage.setItem(`trips-${user.id}`, JSON.stringify(trips));
@@ -94,7 +89,6 @@ export const TripsProvider = ({ children }: { children: ReactNode }) => {
       )
     );
     
-    // Update current trip if it's the one being edited
     if (currentTrip && currentTrip.id === tripId) {
       setCurrentTripState(prevTrip => prevTrip ? { ...prevTrip, ...tripData } : null);
     }
@@ -108,7 +102,6 @@ export const TripsProvider = ({ children }: { children: ReactNode }) => {
   const deleteTrip = (tripId: string) => {
     setTrips(prevTrips => prevTrips.filter(trip => trip.id !== tripId));
     
-    // Clear current trip if it's the one being deleted
     if (currentTrip && currentTrip.id === tripId) {
       setCurrentTripState(null);
     }
@@ -129,11 +122,11 @@ export const TripsProvider = ({ children }: { children: ReactNode }) => {
     setCurrentTripState(trip);
   };
 
-  const addExpense = (tripId: string, expense: Omit<Expense, "id" | "tripId">) => {
+  const addExpense = (tripId: string, expense: Omit<Expense, "id" | "userId">) => {
     const newExpense: Expense = {
       ...expense,
       id: generateId(),
-      tripId,
+      userId: user?.id || '',
     };
     
     setTrips(prevTrips => 
@@ -144,7 +137,6 @@ export const TripsProvider = ({ children }: { children: ReactNode }) => {
       )
     );
     
-    // Update current trip if it's the one being edited
     if (currentTrip && currentTrip.id === tripId) {
       setCurrentTripState(prevTrip => 
         prevTrip ? 
@@ -169,7 +161,6 @@ export const TripsProvider = ({ children }: { children: ReactNode }) => {
       }))
     );
     
-    // Update current trip if it contains the expense being edited
     if (currentTrip && currentTrip.expenses.some(e => e.id === expenseId)) {
       setCurrentTripState(prevTrip => 
         prevTrip ? 
@@ -197,7 +188,6 @@ export const TripsProvider = ({ children }: { children: ReactNode }) => {
       }))
     );
     
-    // Update current trip if it contains the expense being deleted
     if (currentTrip && currentTrip.expenses.some(e => e.id === expenseId)) {
       setCurrentTripState(prevTrip => 
         prevTrip ? 
@@ -224,7 +214,6 @@ export const TripsProvider = ({ children }: { children: ReactNode }) => {
       )
     );
     
-    // Update current trip if it's the one being completed
     if (currentTrip && currentTrip.id === tripId) {
       setCurrentTripState(prevTrip => 
         prevTrip ? 

@@ -25,3 +25,17 @@ export type Expense = {
   description: string;
   category: ExpenseCategory;
 };
+
+export type TripStatus = "draft" | "active" | "completed";
+
+export type Trip = {
+  id: string;
+  userId: string;
+  title: string;
+  description?: string;
+  destination?: string;
+  startDate: Date;
+  endDate?: Date;
+  status: TripStatus;
+  expenses: Expense[];
+};
