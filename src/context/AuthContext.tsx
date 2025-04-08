@@ -4,6 +4,14 @@ import { createContext, useContext, useState, ReactNode, useEffect } from "react
 import { useToast } from "@/components/ui/use-toast";
 import { generateId } from "@/lib/utils";
 
+type UserProfileUpdate = {
+  name: string;
+  position?: string;
+  department?: string;
+  employeeId?: string;
+  phoneNumber?: string;
+};
+
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
@@ -11,6 +19,7 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUserProfile: (profileData: UserProfileUpdate) => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -48,6 +57,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: generateId(),
         email,
         name: email.split('@')[0], // Simple name extraction
+        position: "Software Engineer",
+        department: "Technology",
+        employeeId: "EMP" + Math.floor(10000 + Math.random() * 90000),
+        phoneNumber: "",
       };
       
       setUser(mockUser);
@@ -80,6 +93,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: generateId(),
         email,
         name,
+        position: "",
+        department: "",
+        employeeId: "EMP" + Math.floor(10000 + Math.random() * 90000),
+        phoneNumber: "",
       };
       
       setUser(mockUser);
@@ -101,6 +118,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateUserProfile = (profileData: UserProfileUpdate) => {
+    if (!user) return;
+
+    const updatedUser = {
+      ...user,
+      ...profileData
+    };
+
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
@@ -119,6 +148,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         register,
         logout,
+        updateUserProfile,
       }}
     >
       {children}

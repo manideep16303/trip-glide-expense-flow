@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import AuthPage from "./AuthPage";
-import DashboardPage from "./DashboardPage";
+import { Navigate } from "react-router-dom";
 
 const Index = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -14,7 +14,7 @@ const Index = () => {
     );
   }
 
-  return isAuthenticated ? <DashboardPage /> : <AuthPage />;
+  return isAuthenticated ? <Navigate to="/expenses" replace /> : <AuthPage />;
 };
 
 export default Index;

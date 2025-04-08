@@ -6,12 +6,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import DashboardPage from "./pages/DashboardPage";
-import TripsPage from "./pages/TripsPage";
-import TripDetailsPage from "./pages/TripDetailsPage";
 import AuthPage from "./pages/AuthPage";
+import ExpensesPage from "./pages/ExpensesPage";
+import ReportPage from "./pages/ReportPage";
+import ProfilePage from "./pages/ProfilePage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { TripsProvider } from "./context/TripsContext";
+import { ExpensesProvider } from "./context/ExpensesContext";
 
 const queryClient = new QueryClient();
 
@@ -40,26 +40,26 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<AuthPage />} />
       <Route 
-        path="/dashboard" 
+        path="/expenses" 
         element={
           <ProtectedRoute>
-            <DashboardPage />
+            <ExpensesPage />
           </ProtectedRoute>
         } 
       />
       <Route 
-        path="/trips" 
+        path="/report" 
         element={
           <ProtectedRoute>
-            <TripsPage />
+            <ReportPage />
           </ProtectedRoute>
         } 
       />
       <Route 
-        path="/trips/:tripId" 
+        path="/profile" 
         element={
           <ProtectedRoute>
-            <TripDetailsPage />
+            <ProfilePage />
           </ProtectedRoute>
         } 
       />
@@ -71,7 +71,7 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TripsProvider>
+      <ExpensesProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -79,7 +79,7 @@ const App = () => (
             <AppRoutes />
           </BrowserRouter>
         </TooltipProvider>
-      </TripsProvider>
+      </ExpensesProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

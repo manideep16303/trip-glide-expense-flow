@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { useTrips } from "@/context/TripsContext";
 import { Expense, ExpenseCategory } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,31 +12,31 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useExpenses } from "@/context/ExpensesContext";
 
 interface ExpenseFormProps {
   isOpen: boolean;
   onClose: () => void;
-  tripId: string;
   expense?: Expense;
   mode: "create" | "edit";
 }
 
 const expenseCategories: ExpenseCategory[] = [
-  "TA/DA",
-  "Hotel/Accommodation",
-  "Local conveyance",
   "Food",
+  "Travel",
+  "Stay",
+  "Local conveyance",
   "Miscellaneous",
   "Toll/Parking charges",
 ];
 
-const ExpenseForm = ({ isOpen, onClose, tripId, expense, mode }: ExpenseFormProps) => {
+export const ExpenseForm = ({ isOpen, onClose, expense, mode }: ExpenseFormProps) => {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<ExpenseCategory>("Miscellaneous");
   const [date, setDate] = useState<Date>(new Date());
   
-  const { addExpense, updateExpense } = useTrips();
+  const { addExpense, updateExpense, deleteExpense } = useExpenses();
 
   useEffect(() => {
     if (expense && mode === "edit") {
@@ -54,7 +53,7 @@ const ExpenseForm = ({ isOpen, onClose, tripId, expense, mode }: ExpenseFormProp
     e.preventDefault();
     
     if (mode === "create") {
-      addExpense(tripId, {
+      addExpense({
         amount: parseFloat(amount),
         description,
         category,
@@ -71,6 +70,14 @@ const ExpenseForm = ({ isOpen, onClose, tripId, expense, mode }: ExpenseFormProp
     
     resetForm();
     onClose();
+  };
+
+  const handleDelete = () => {
+    if (expense) {
+      deleteExpense(expense.id);
+      resetForm();
+      onClose();
+    }
   };
 
   const resetForm = () => {
@@ -168,11 +175,16 @@ const ExpenseForm = ({ isOpen, onClose, tripId, expense, mode }: ExpenseFormProp
               required
             />
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            {mode === "edit" && (
+              <Button type="button" variant="destructive" onClick={handleDelete} className="w-full sm:w-auto">
+                Delete
+              </Button>
+            )}
+            <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="w-full sm:w-auto">
               {mode === "create" ? "Add Expense" : "Update Expense"}
             </Button>
           </DialogFooter>
@@ -181,5 +193,3 @@ const ExpenseForm = ({ isOpen, onClose, tripId, expense, mode }: ExpenseFormProp
     </Dialog>
   );
 };
-
-export default ExpenseForm;
